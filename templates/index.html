@@ -2,6 +2,9 @@
 
 {% block content %}
     <div class="container">
+        <div class="progress mt-3">
+            <div class="progress-bar" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}% еще не проверены</div>
+        </div>
         <div class="row  mt-5">
             {% include '_statistic.html' %}
             <div class="col-6 col-sm-6 col-md-8 col-lg-9 col-xl-9">

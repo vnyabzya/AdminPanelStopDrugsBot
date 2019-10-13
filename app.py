@@ -260,6 +260,12 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Войти')
 
 
+def get_progress():
+    all_count = len(TelegramShop.query.all())
+    ready_count = len(Shop.query.filter(Shop.telegram_shop !=None, Shop.checked_by_admin == True).all())
+    return int(100 * ready_count / all_count)
+
+
 @app.route('/edit_link/<telegram_shop_id>', methods=['GET', 'POST'])
 @login_required
 def edit_telegram_shop(telegram_shop_id):
@@ -309,7 +315,7 @@ def edit_telegram_shop(telegram_shop_id):
         form.block.data = False if not telegram_shop_obj.block else True
         form.hide.data = telegram_shop_obj.hide
     return render_template('edit_profile.html', title='Edit Profile',
-                           form=form, telegram_shop=telegram_shop_obj)
+                           form=form, telegram_shop=telegram_shop_obj, progress=get_progress())
 
 
 @app.route('/blocked/', methods=['GET', 'POST'])
@@ -331,7 +337,7 @@ def blocked():
     prev_url = url_for('blocked', page=telegram_shops.prev_num) \
         if telegram_shops.has_prev else None
     return render_template("index.html", title='Заблокированые', telegram_shops=telegram_shops.items, next_url=next_url,
-                           prev_url=prev_url, regions=regions)
+                           prev_url=prev_url, regions=regions, progress=get_progress())
 
 
 @app.route('/checked_by_admin/', methods=['GET', 'POST'])
@@ -350,7 +356,7 @@ def checked_by_admin():
         if shops.has_prev else None
     return render_template("index.html", title='Проверены админом',
                            telegram_shops=[item.telegram_shop for item in shops.items], next_url=next_url,
-                           prev_url=prev_url, regions=regions)
+                           prev_url=prev_url, regions=regions, progress=get_progress())
 
 
 @app.route('/statistic/', methods=['GET', 'POST'])
@@ -376,7 +382,7 @@ def index():
     prev_url = url_for('index', page=telegram_shops.prev_num) \
         if telegram_shops.has_prev else None
     return render_template("index.html", title='Все записи', telegram_shops=telegram_shops.items, next_url=next_url,
-                           prev_url=prev_url, regions=regions)
+                           prev_url=prev_url, regions=regions, progress=get_progress())
 
 
 @app.route('/delete/<telegram_id>', methods=['GET', 'POST'])
