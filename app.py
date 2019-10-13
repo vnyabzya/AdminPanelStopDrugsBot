@@ -11,6 +11,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, f
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from telebot import types
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import SelectMultipleField, widgets, StringField, SubmitField, BooleanField, PasswordField
 from wtforms.validators import DataRequired
@@ -67,6 +68,15 @@ regions__telegram_shops = db.Table('regions__telegram_shops',
                                    db.Column('telegram_shops_id', db.Integer, db.ForeignKey('telegram_shops.id')),
                                    db.UniqueConstraint('regions_id', 'telegram_shops_id')
                                    )
+
+
+def gen_inline_keyboard(items):
+    inline_keyboard = types.InlineKeyboardMarkup(row_width=1)
+    button_items = []
+    for item in items:
+        button_items.append(types.InlineKeyboardButton(item.get('text'), callback_data=item.get('value')))
+    inline_keyboard.row(*button_items)
+    return inline_keyboard
 
 
 class Region(db.Model):
@@ -370,7 +380,7 @@ def delete(telegram_id):
 
 @app.route('/publish/<telegram_id>', methods=['GET', 'POST'])
 @login_required
-def delete(telegram_id):
+def publish(telegram_id):
     telegram = TelegramShop.query.filter(TelegramShop.id == telegram_id).first()
     try:
         telegram.publish_telegram_shop()
