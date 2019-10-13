@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="col-6 mx-auto">
+            <form action="" method="post">
+                {{ form.hidden_tag() }}
+
+                <legend>Изменить ссылку</legend>
+                <a href="{{ telegram_shop.telegram_link }}">{{ telegram_shop.telegram_link }}</a>
+                <div class="form-row">
+                    {{ form.telegram_link.label }}<br>
+                    {{ form.telegram_link(size=32, class_="form-control") }}<br>
+                    {% for error in form.telegram_link.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </div>
+                <div class="form-row">
+                    {% for region in form.regions %}
+                        <div class="col-3">
+                            <div class="form-check">
+                                {{ region(class="form-check-input") }}
+                                {{ region.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="form-row">
+                    <div class="form-check">
+                        {{ form.checked_by_admin(class="form-check-input") }}
+                        {{ form.checked_by_admin.label(class="form-check-label") }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-check">
+                        {{ form.block(class="form-check-input") }}
+                        {{ form.block.label(class="form-check-label") }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-check">
+                        {{ form.hide(class="form-check-input") }}
+                        {{ form.hide.label(class="form-check-label") }}
+                    </div>
+                </div>
+                {{ form.submit(class_="btn btn-success") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

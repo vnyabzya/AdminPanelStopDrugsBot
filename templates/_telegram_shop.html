@@ -1,0 +1,11 @@
+<div class="col-3 mt-3">
+    <div class="card">
+        <div class="card-title mx-auto">
+            <a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="badge badge-pill badge-{% if telegram_shop%}{% if telegram_shop.shop.checked_by_admin%}success{% else %}danger{% endif %}{% else %}danger{% endif %}"> {{ telegram_shop.telegram_link }}</a>
+        </div>
+        <div class="card-body">
+            <div class="m-3"><a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="btn btn-primary">Изменить</a></div>
+            <div class="m-3"><a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger">Удалить</a></div>
+        </div>
+    </div>
+</div>

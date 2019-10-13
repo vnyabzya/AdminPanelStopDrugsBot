@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="row mt-5">
+            {% for telegram_shop in telegram_shops %}
+                {% include '_telegram_shop.html' %}
+            {% endfor %}
+        </div>
+        <div class="row mt-5">
+            <nav aria-label="Page navigation example" class="mx-auto">
+                <ul class="pagination">
+                    {% if prev_url %}
+                        <li class="page-item"><a class="page-link" href="{{ prev_url }}">Предыдущие</a></li>
+                    {% endif %}
+                    {% if next_url %}
+                        <li class="page-item"><a class="page-link" href="{{ next_url }}">Следующие</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+{% endblock %}
