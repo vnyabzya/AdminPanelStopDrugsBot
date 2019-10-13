@@ -5,9 +5,11 @@
             <a href="{{ telegram_shop.telegram_link }}" class="badge badge-pill badge-{% if telegram_shop%}{% if telegram_shop.shop.checked_by_admin%}success{% else %}danger{% endif %}{% else %}danger{% endif %}"> {{ telegram_shop.telegram_link }}</a>
         </div>
         <div class="card-body">
-            {% for region in telegram_shop.regions %}
-                {{ region.name }}
-            {% endfor %}
+            <div class="row">
+                {% for region in telegram_shop.regions %}
+                    {{ region.name }}
+                {% endfor %}
+            </div>
             <div class="row">
                 {% if telegram_shop.hide %}Скрытый{% else %}Доступен из бота{% endif %}
             </div>
