@@ -245,7 +245,7 @@ class LoginForm(FlaskForm):
     username = StringField('Логин', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить пароль')
-    submit = SubmitField('Ввойти')
+    submit = SubmitField('Войти')
 
 
 @app.route('/edit_link/<telegram_shop_id>', methods=['GET', 'POST'])
