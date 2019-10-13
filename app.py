@@ -177,7 +177,7 @@ class TelegramShop(db.Model):
         except Exception as error:
             short_link = None
             print(error)
-        for user in User.query.filter(User.admin != None).all():
+        for user in User.query.filter(User.activist == True).all():
             try:
                 bot.send_message(user.id, '👨‍💻 Друже, просимо залишити скаргу про цю адресу, що використовують нарко'
                                           'зловмисники!\n\nℹ️ Перейдіть за посиланням, натисніть "Поскаржитись" ==> '
