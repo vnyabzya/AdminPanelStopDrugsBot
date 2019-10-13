@@ -313,6 +313,8 @@ def edit_telegram_shop(telegram_shop_id):
 @app.route('/blocked/', methods=['GET', 'POST'])
 @login_required
 def blocked():
+    regions = [dict(region=region.name, count=len(region.telegram_shops)) for region in
+               Region.query.order_by(Region.name).all()]
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
     value = request.args.get('value', True)
@@ -327,12 +329,14 @@ def blocked():
     prev_url = url_for('blocked', page=telegram_shops.prev_num) \
         if telegram_shops.has_prev else None
     return render_template("index.html", title='Заблокированые', telegram_shops=telegram_shops.items, next_url=next_url,
-                           prev_url=prev_url)
+                           prev_url=prev_url, regions=regions)
 
 
 @app.route('/checked_by_admin/', methods=['GET', 'POST'])
 @login_required
 def checked_by_admin():
+    regions = [dict(region=region.name, count=len(region.telegram_shops)) for region in
+               Region.query.order_by(Region.name).all()]
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
     value = request.args.get('value', True)
@@ -344,13 +348,23 @@ def checked_by_admin():
         if shops.has_prev else None
     return render_template("index.html", title='Проверены админом',
                            telegram_shops=[item.telegram_shop for item in shops.items], next_url=next_url,
-                           prev_url=prev_url)
+                           prev_url=prev_url, regions=regions)
+
+
+@app.route('/statistic/', methods=['GET', 'POST'])
+@login_required
+def statistic():
+    regions = [dict(region=region.name, count=len(region.telegram_shops)) for region in
+               Region.query.order_by(Region.name).all()]
+    return render_template("_statistic.html", title='Статистика по регионам', regions=regions)
 
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
+    regions = [dict(region=region.name, count=len(region.telegram_shops)) for region in
+               Region.query.order_by(Region.name).all()]
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
     telegram_shops = TelegramShop.query.paginate(
@@ -360,7 +374,7 @@ def index():
     prev_url = url_for('index', page=telegram_shops.prev_num) \
         if telegram_shops.has_prev else None
     return render_template("index.html", title='Все записи', telegram_shops=telegram_shops.items, next_url=next_url,
-                           prev_url=prev_url)
+                           prev_url=prev_url, regions=regions)
 
 
 @app.route('/delete/<telegram_id>', methods=['GET', 'POST'])
