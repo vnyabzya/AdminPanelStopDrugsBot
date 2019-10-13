@@ -147,8 +147,11 @@ class TelegramShop(db.Model):
         secondary=regions__telegram_shops,
         back_populates="telegram_shops")
 
-    def send_telegram_link(self):
-        print(self.telegram_link)
+    def publish_telegram_shop(self):
+        job = queue.enqueue_call(
+            func=self.add_and_send_new_link, result_ttl=5000
+        )
+        return job
 
     def get_mailto_link(self):
         subject = urllib.parse.quote('Drugs Sales')
@@ -355,6 +358,22 @@ def index():
 @app.route('/delete/<telegram_id>', methods=['GET', 'POST'])
 @login_required
 def delete(telegram_id):
+    TelegramShop.query.filter(TelegramShop.id == telegram_id).delete()
+    try:
+        db.session.commit()
+        flash('Запись была удалена успешно')
+    except:
+        flash('Что-то пошло не так', category='danger')
+    if 'url' in session:
+        return redirect(session['url'])
+    else:
+        return redirect(url_for('index'))
+
+
+@app.route('/publish/<telegram_id>', methods=['GET', 'POST'])
+@login_required
+def delete(telegram_id):
+    current_user
     TelegramShop.query.filter(TelegramShop.id == telegram_id).delete()
     try:
         db.session.commit()
