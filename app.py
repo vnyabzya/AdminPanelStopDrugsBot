@@ -1,23 +1,53 @@
+import urllib
+
+import redis
+import requests
+import telebot
 from flask import Flask, request, render_template, url_for, redirect, flash, session
 from flask_wtf import FlaskForm
+from rq import Queue
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, func, Text
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import SelectMultipleField, widgets, StringField, SubmitField, BooleanField, PasswordField
 from wtforms.validators import DataRequired
 
 from config import Config
-from flask_login import LoginManager, UserMixin, current_user, login_user, login_required
+from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
+
+
+class UrlShortenTinyurl:
+    URL = "http://tinyurl.com/api-create.php"
+
+    def shorten(self, url_long):
+        try:
+            url = self.URL + "?" \
+                  + urllib.parse.urlencode({"url": url_long})
+            res = requests.get(url)
+            if res.status_code == 200:
+                return res.text
+            else:
+                return None
+
+        except Exception as e:
+            raise
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 TOKEN = app.config.get('TOKEN')
+bot = telebot.TeleBot(TOKEN)
+migrate = Migrate(app, db)
 LINK = app.config.get('LINK')
+redis_url = app.config.get('REDIS_URL')
+conn = redis.from_url(redis_url)
+queue = Queue(connection=conn)
 login = LoginManager(app)
 login.login_view = 'login'
+obj = UrlShortenTinyurl()
 
 
 @login.user_loader
@@ -51,11 +81,18 @@ class Region(db.Model):
 class Admin(UserMixin, db.Model):
     __tablename__ = 'admins'
     id = Column(Integer, primary_key=True, unique=True)
-    users = relationship("User", back_populates="admin")
+    user = relationship("User", uselist=False, back_populates="admin")
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     rule = Column(String)
+
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 class Image(db.Model):
@@ -72,7 +109,7 @@ class User(db.Model):
     last_name = Column(String)
     activist = Column(Boolean, default=False)
     create_shops = relationship("Shop", back_populates="user")
-    admin = relationship("Admin", back_populates="users")
+    admin = relationship("Admin", back_populates="user")
     admin_id = Column(Integer, ForeignKey('admins.id'))
     inviter = relationship("User", remote_side='User.id', back_populates="invited_users")
     inviter_id = Column(Integer, ForeignKey('users.id'))
@@ -108,6 +145,41 @@ class TelegramShop(db.Model):
         "Region",
         secondary=regions__telegram_shops,
         back_populates="telegram_shops")
+
+    def send_telegram_link(self):
+        print(self.telegram_link)
+
+    def get_mailto_link(self):
+        subject = urllib.parse.quote('Drugs Sales')
+        body = urllib.parse.quote(
+            'Please block this channel: {} in connection with the distribution and sale of drugs'.format(
+                self.telegram_link))
+        return "mailto:{}?subject={}&body={}".format(
+            'abuse@telegram.org', subject, body
+        )
+
+    def add_and_send_new_link(self):
+        try:
+            short_link = obj.shorten(self.get_mailto_link())
+        except Exception as error:
+            short_link = None
+            print(error)
+        for user in User.query.filter(User.admin != None).all():
+            try:
+                bot.send_message(user.id, '👨‍💻 Друже, просимо залишити скаргу про цю адресу, що використовують нарко'
+                                          'зловмисники!\n\nℹ️ Перейдіть за посиланням, натисніть "Поскаржитись" ==> '
+                                          'оберіть пункт "Інше" ==> введіть "Drug Sales" ==> '
+                                          'натисніть ✅\n"{}"'.format(self.telegram_link))
+                if short_link:
+                    user.send_message(text="Також Ви можете надіслати скаргу на цей бот/канал/чат/користувача на пошту "
+                                           "адміністрації Telegram (додавайте до листа скріншоти, як доказ), "
+                                           "для цього натисність <a href='{}'>Відправити лист</a>".format(short_link),
+                                      parse_mode="HTML")
+                bot.send_message(user.id, text='А ти вже поскаржився?', reply_markup=gen_inline_keyboard(
+                    [{'text': 'Так ✅',
+                      'value': 'reported_{}'.format(self.id)}]))
+            except Exception as error:
+                continue
 
 
 class WebAddress(db.Model):
@@ -167,14 +239,16 @@ class EditTelegramShopForm(FlaskForm):
     hide = BooleanField('Скрытый', default=False)
     submit = SubmitField('Сохранить')
 
+
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
-@login_required
+
 @app.route('/edit_link/<telegram_shop_id>', methods=['GET', 'POST'])
+@login_required
 def edit_telegram_shop(telegram_shop_id):
     telegram_shop_obj = TelegramShop.query.get_or_404(telegram_shop_id)
     form = EditTelegramShopForm()
@@ -222,8 +296,10 @@ def edit_telegram_shop(telegram_shop_id):
     return render_template('edit_profile.html', title='Edit Profile',
                            form=form, telegram_shop=telegram_shop_obj)
 
-@login_required
+
+
 @app.route('/blocked/', methods=['GET', 'POST'])
+@login_required
 def blocked():
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
@@ -241,8 +317,9 @@ def blocked():
     return render_template("index.html", title='Заблокированые', telegram_shops=telegram_shops.items, next_url=next_url,
                            prev_url=prev_url)
 
-@login_required
+
 @app.route('/checked_by_admin/', methods=['GET', 'POST'])
+@login_required
 def checked_by_admin():
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
@@ -257,9 +334,10 @@ def checked_by_admin():
                            telegram_shops=[item.telegram_shop for item in shops.items], next_url=next_url,
                            prev_url=prev_url)
 
-@login_required
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
+@login_required
 def index():
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
@@ -273,8 +351,8 @@ def index():
                            prev_url=prev_url)
 
 
-@login_required
 @app.route('/delete/<telegram_id>', methods=['GET', 'POST'])
+@login_required
 def delete(telegram_id):
     TelegramShop.query.filter(TelegramShop.id == telegram_id).delete()
     try:
@@ -301,6 +379,12 @@ def login():
         login_user(admin, remember=form.remember_me.data)
         return redirect(url_for('index'))
     return render_template('login.html', title='Sign In', form=form)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':

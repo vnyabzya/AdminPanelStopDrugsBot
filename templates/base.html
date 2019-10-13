@@ -12,7 +12,8 @@
     <title>{{ title }}</title>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+{% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="#">Админ панель StopDrugsBot</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -23,9 +24,17 @@
             <li class="nav-item"><a class="nav-link" href="/blocked/">Заблокированы</a></li>
             <li class="nav-item"><a class="nav-link" href="/checked_by_admin/">Проверены администратором</a></li>
             <li class="nav-item"><a class="nav-link" href="/checked_by_admin/?value=False">Еще не проверены администратором</a></li>
+            <div>
+                {% if current_user.is_anonymous %}
+                    <a href="{{ url_for('login') }}" class="btn btn-success">Login</a>
+                {% else %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+                {% endif %}
+            </div>
         </ul>
     </div>
 </nav>
+{% endblock %}
 {% with messages = get_flashed_messages(with_categories=true) %}
     <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
     {% if messages %}

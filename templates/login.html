@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block navbar %}{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="col-sm-4 mx-auto mt-5">
+            <div class="card">
+                <article class="card-body">
+                    <h4 class="card-title mb-4 mt-1">Sign in</h4>
+                    <form action="" method="post" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="form-group">
+                            {{ form.username.label }}<br>
+                            {{ form.username(size=32, class_="form-control") }}
+                        </div> <!-- form-group// -->
+                        <div class="form-group">
+                            <a class="float-right" href="#">Forgot?</a>
+                            {{ form.password.label }}<br>
+                            {{ form.password(size=32, class_="form-control") }}
+                        </div> <!-- form-group// -->
+                        <div class="form-group">
+                            {{ form.remember_me() }} {{ form.remember_me.label }}
+                        </div> <!-- form-group// -->
+                        <div class="form-group">
+                            {{ form.submit(class_="btn btn-primary btn-block") }}
+                        </div> <!-- form-group// -->
+                    </form>
+                </article>
+            </div>
+        </div>
+    </div>
+{% endblock %}
