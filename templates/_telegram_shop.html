@@ -8,9 +8,18 @@
             {% for region in telegram_shop.regions %}
                 {{ region.name }}
             {% endfor %}
+            <div class="row">
+                {% if telegram_shop.hide %}Скрытый{% else %}Доступен из бота{% endif %}
+            </div>
+            <div class="row">
+                {% if telegram_shop.block %}Заблокирова{% else %}Доступен{% endif %}
+            </div>
+            <div class="row">
+                {% if telegram_shop.shop.checked_by_admin%}Проверен администратором{% else %}Не проверен администратором{% endif %}
+            </div>
             <div class="row mt-2">
                 <div class="col-6"><a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="btn btn-primary">Изменить</a></div>
-            <div class="col-6"><a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger">Удалить</a></div>
+                <div class="col-6"><a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger">Удалить</a></div>
             </div>
         </div>
     </div>
