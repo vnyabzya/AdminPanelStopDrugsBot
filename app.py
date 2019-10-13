@@ -285,6 +285,8 @@ def edit_telegram_shop(telegram_shop_id):
             telegram_shop_obj.shop = Shop(checked_by_admin=form.checked_by_admin.data)
         if form.block.data and not telegram_shop_obj.block:
             telegram_shop_obj.block = Block()
+        else:
+            telegram_shop_obj.block = None
         telegram_shop_obj = form.hide.data
         try:
             db.session.commit()
