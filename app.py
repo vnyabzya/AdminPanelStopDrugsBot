@@ -88,7 +88,6 @@ class Admin(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     rule = Column(String)
 
-
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -301,7 +300,6 @@ def edit_telegram_shop(telegram_shop_id):
                            form=form, telegram_shop=telegram_shop_obj)
 
 
-
 @app.route('/blocked/', methods=['GET', 'POST'])
 @login_required
 def blocked():
@@ -373,11 +371,10 @@ def delete(telegram_id):
 @app.route('/publish/<telegram_id>', methods=['GET', 'POST'])
 @login_required
 def delete(telegram_id):
-    current_user
-    TelegramShop.query.filter(TelegramShop.id == telegram_id).delete()
+    telegram = TelegramShop.query.filter(TelegramShop.id == telegram_id).first()
     try:
-        db.session.commit()
-        flash('Запись была удалена успешно')
+        telegram.publish_telegram_shop()
+        flash('Запись была опубликована успешно')
     except:
         flash('Что-то пошло не так', category='danger')
     if 'url' in session:
