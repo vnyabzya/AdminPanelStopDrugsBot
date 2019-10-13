@@ -256,7 +256,7 @@ def edit_telegram_shop(telegram_shop_id):
     form.regions.choices = [(region.id, region.name) for region in Region.query.all()]
     if form.validate_on_submit():
         # get our choices again, could technically cache these in a list if we wanted but w/e
-        regions = Region.query.all()
+        regions = Region.query.order_by(Region.name).all()
         # need a list to hold our choices
         accepted = []
         # looping through the choices, we check the choice ID against what was passed in the form
