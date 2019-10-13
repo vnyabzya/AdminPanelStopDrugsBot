@@ -145,6 +145,7 @@ class TelegramShop(db.Model):
     block_id = Column(Integer, ForeignKey('blocks.id'))
     block = relationship("Block", back_populates="telegram_shops")
     hide = Column(Boolean, default=True)
+    valid = Column(Boolean, default=True)
 
     users_telegram_shops = relationship(
         "User",
@@ -261,8 +262,8 @@ class LoginForm(FlaskForm):
 
 
 def get_progress():
-    all_count = len(TelegramShop.query.all())
-    ready_count = len(Shop.query.filter(Shop.telegram_shop !=None, Shop.checked_by_admin == True).all())
+    all_count = len(TelegramShop.query.filter(TelegramShop.valid == True).all())
+    ready_count = len(Shop.query.filter(Shop.telegram_shop != None, Shop.checked_by_admin == True).all())
     return int(100 * ready_count / all_count)
 
 
@@ -327,10 +328,10 @@ def blocked():
     page = request.args.get('page', 1, type=int)
     value = request.args.get('value', True)
     if value:
-        telegram_shops = TelegramShop.query.filter(TelegramShop.block != None).paginate(
+        telegram_shops = TelegramShop.query.filter(TelegramShop.block != None, TelegramShop.valid == True).paginate(
             page, app.config['POSTS_PER_PAGE'], False)
     else:
-        telegram_shops = TelegramShop.query.filter(TelegramShop.block == None).paginate(
+        telegram_shops = TelegramShop.query.filter(TelegramShop.block == None, TelegramShop.valid == True).paginate(
             page, app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('blocked', page=telegram_shops.next_num) \
         if telegram_shops.has_next else None
@@ -375,7 +376,7 @@ def index():
                Region.query.order_by(Region.name).all()]
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
-    telegram_shops = TelegramShop.query.paginate(
+    telegram_shops = TelegramShop.query(TelegramShop.valid == True).paginate(
         page, app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('index', page=telegram_shops.next_num) \
         if telegram_shops.has_next else None
