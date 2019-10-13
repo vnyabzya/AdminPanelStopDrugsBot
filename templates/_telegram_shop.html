@@ -1,24 +1,20 @@
-<div class="col-lg-4 col-md-12">
-    <div class="card mb-3">
-        <div class="card-title mx-auto">
+<div class="card col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3">
+    <div class="card-title mx-auto">
+        <a href="{{ telegram_shop.telegram_link }}" class="badge badge-pill badge-{% if telegram_shop%}{% if telegram_shop.shop.checked_by_admin%}success{% else %}danger{% endif %}{% else %}danger{% endif %}"> {{ telegram_shop.telegram_link }}</a>
+    </div>
+    <div class="card-body">
+        {% for region in telegram_shop.regions %}
+            {{ region.name }}
+        {% endfor %}
+        <hr>
+        {% if telegram_shop.hide %}Скрытый{% else %}Доступен из бота{% endif %}<br>
+        {% if telegram_shop.block %}Заблокирова{% else %}Доступен{% endif %}<br>
+        {% if telegram_shop.shop.checked_by_admin%}Проверен администратором{% else %}Не проверен администратором{% endif %}
+        <hr>
+        <div class="row mt-2">
 
-            <a href="{{ telegram_shop.telegram_link }}" class="badge badge-pill badge-{% if telegram_shop%}{% if telegram_shop.shop.checked_by_admin%}success{% else %}danger{% endif %}{% else %}danger{% endif %}"> {{ telegram_shop.telegram_link }}</a>
-        </div>
-        <div class="card-body">
-            {% for region in telegram_shop.regions %}
-                {{ region.name }}
-            {% endfor %}
-            <hr>
-            {% if telegram_shop.hide %}Скрытый{% else %}Доступен из бота{% endif %}<br>
-            {% if telegram_shop.block %}Заблокирова{% else %}Доступен{% endif %}<br>
-            {% if telegram_shop.shop.checked_by_admin%}Проверен администратором{% else %}Не проверен администратором{% endif %}
-            <hr>
-            <div class="row mt-2">
-
-                <div class="col-6"><a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="btn btn-primary">Изменить</a></div>
-                <div class="col-6"><a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger">Удалить</a></div>
-            </div>
+            <div class="col-6"><a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="btn btn-primary">Изменить</a></div>
+            <div class="col-6"><a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger">Удалить</a></div>
         </div>
     </div>
-
 </div>

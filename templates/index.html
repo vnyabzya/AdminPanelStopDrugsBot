@@ -4,25 +4,25 @@
     <div class="container">
         <div class="row  mt-5">
             {% include '_statistic.html' %}
-            <div class="col-9">
+            <div class="col-6 col-sm-6 col-md-8 col-lg-9 col-xl-9">
                 <div class="row">
                     {% for telegram_shop in telegram_shops %}
                         {% include '_telegram_shop.html' %}
                     {% endfor %}
                 </div>
-                <div class="row">
-                    <nav aria-label="Page navigation example" class="mx-auto">
-                        <ul class="pagination">
-                            {% if prev_url %}
-                                <li class="page-item"><a class="page-link" href="{{ prev_url }}">Предыдущие</a></li>
-                            {% endif %}
-                            {% if next_url %}
-                                <li class="page-item"><a class="page-link" href="{{ next_url }}">Следующие</a></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                </div>
             </div>
+        </div>
+        <div class="row">
+            <nav aria-label="Page navigation example" class="mx-auto">
+                <ul class="pagination">
+                    {% if prev_url %}
+                        <li class="page-item"><a class="page-link" href="{{ prev_url }}">Предыдущие</a></li>
+                    {% endif %}
+                    {% if next_url %}
+                        <li class="page-item"><a class="page-link" href="{{ next_url }}">Следующие</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </div>
 {% endblock %}
