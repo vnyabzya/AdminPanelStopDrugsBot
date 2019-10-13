@@ -1,3 +1,4 @@
+import os
 import urllib
 
 import redis
@@ -388,4 +389,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(host='192.168.1.6')
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
