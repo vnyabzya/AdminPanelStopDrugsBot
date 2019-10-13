@@ -2,7 +2,7 @@
     <div class="card-title mx-auto">
         <a href="{{ telegram_shop.telegram_link }}" class="badge badge-pill badge-{% if telegram_shop%}{% if telegram_shop.shop.checked_by_admin%}success{% else %}danger{% endif %}{% else %}danger{% endif %}"> {{ telegram_shop.telegram_link }}</a>
     </div>
-    <div class="card-body">
+    <div class="card-body mx-auto">
         {% for region in telegram_shop.regions %}
             {{ region.name }}
         {% endfor %}
@@ -11,10 +11,9 @@
         {% if telegram_shop.block %}Заблокирова{% else %}Доступен{% endif %}<br>
         {% if telegram_shop.shop.checked_by_admin%}Проверен администратором{% else %}Не проверен администратором{% endif %}
         <hr>
-        <div class="row mt-2">
-
-            <div class="col-6"><a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="btn btn-primary">Изменить</a></div>
-            <div class="col-6"><a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger">Удалить</a></div>
+        <div class="row">
+            <a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="btn btn-primary col-6">Изменить</a>
+            <a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="btn btn-danger col-6">Удалить</a>
         </div>
     </div>
 </div>
