@@ -253,7 +253,7 @@ class LoginForm(FlaskForm):
 def edit_telegram_shop(telegram_shop_id):
     telegram_shop_obj = TelegramShop.query.get_or_404(telegram_shop_id)
     form = EditTelegramShopForm()
-    form.regions.choices = [(region.id, region.name) for region in Region.query.all()]
+    form.regions.choices = [(region.id, region.name) for region in Region.query.order_by(Region.name).all()]
     if form.validate_on_submit():
         # get our choices again, could technically cache these in a list if we wanted but w/e
         regions = Region.query.order_by(Region.name).all()
