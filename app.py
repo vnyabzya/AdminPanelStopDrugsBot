@@ -4,10 +4,11 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, f
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from wtforms import SelectMultipleField, widgets, StringField, SubmitField, BooleanField
+from wtforms import SelectMultipleField, widgets, StringField, SubmitField, BooleanField, PasswordField
 from wtforms.validators import DataRequired
 
 from config import Config
+from flask_login import LoginManager, UserMixin, current_user, login_user, login_required
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,6 +16,14 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 TOKEN = app.config.get('TOKEN')
 LINK = app.config.get('LINK')
+login = LoginManager(app)
+login.login_view = 'login'
+
+
+@login.user_loader
+def load_user(user_id):
+    return Admin.query.get(int(user_id))
+
 
 users__telegram_shops = db.Table('users__telegram_shops',
                                  db.Column('users_id', db.Integer, db.ForeignKey('users.id')),
@@ -39,10 +48,13 @@ class Region(db.Model):
         back_populates="regions")
 
 
-class Admin(db.Model):
+class Admin(UserMixin, db.Model):
     __tablename__ = 'admins'
     id = Column(Integer, primary_key=True, unique=True)
     users = relationship("User", back_populates="admin")
+    username = db.Column(db.String(64), index=True, unique=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+    password_hash = db.Column(db.String(128))
     rule = Column(String)
 
 
@@ -155,7 +167,13 @@ class EditTelegramShopForm(FlaskForm):
     hide = BooleanField('Скрытый', default=False)
     submit = SubmitField('Сохранить')
 
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')
 
+@login_required
 @app.route('/edit_link/<telegram_shop_id>', methods=['GET', 'POST'])
 def edit_telegram_shop(telegram_shop_id):
     telegram_shop_obj = TelegramShop.query.get_or_404(telegram_shop_id)
@@ -204,7 +222,7 @@ def edit_telegram_shop(telegram_shop_id):
     return render_template('edit_profile.html', title='Edit Profile',
                            form=form, telegram_shop=telegram_shop_obj)
 
-
+@login_required
 @app.route('/blocked/', methods=['GET', 'POST'])
 def blocked():
     session['url'] = request.url
@@ -223,7 +241,7 @@ def blocked():
     return render_template("index.html", title='Заблокированые', telegram_shops=telegram_shops.items, next_url=next_url,
                            prev_url=prev_url)
 
-
+@login_required
 @app.route('/checked_by_admin/', methods=['GET', 'POST'])
 def checked_by_admin():
     session['url'] = request.url
@@ -239,7 +257,7 @@ def checked_by_admin():
                            telegram_shops=[item.telegram_shop for item in shops.items], next_url=next_url,
                            prev_url=prev_url)
 
-
+@login_required
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
@@ -255,6 +273,7 @@ def index():
                            prev_url=prev_url)
 
 
+@login_required
 @app.route('/delete/<telegram_id>', methods=['GET', 'POST'])
 def delete(telegram_id):
     TelegramShop.query.filter(TelegramShop.id == telegram_id).delete()
@@ -267,6 +286,21 @@ def delete(telegram_id):
         return redirect(session['url'])
     else:
         return redirect(url_for('index'))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        admin = Admin.query.filter_by(username=form.username.data).first()
+        if admin is None or not admin.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(admin, remember=form.remember_me.data)
+        return redirect(url_for('index'))
+    return render_template('login.html', title='Sign In', form=form)
 
 
 if __name__ == '__main__':
