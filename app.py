@@ -301,12 +301,13 @@ def edit_telegram_shop(telegram_shop_id):
         except:
             flash('Что-то пошло не так', category='danger')
 
-        if 'url' in session:
-            return redirect(session['url'])
-        else:
-            return redirect(url_for('edit_telegram_shop',
-                                    telegram_shop_id=Shop.query.filter(Shop.checked_by_admin == False,
-                                                                       Shop.telegram_shop != None).first()))
+        # if 'url' in session:
+        #     return redirect(session['url'])
+        # else:
+        return redirect(url_for('edit_telegram_shop',
+                                telegram_shop_id=Shop.query.filter(Shop.checked_by_admin == False,
+                                                                   Shop.telegram_shop != None).first()))
+
     else:
         form.telegram_link.data = telegram_shop_obj.telegram_link
         form.regions.data = [region.id for region in telegram_shop_obj.regions]
