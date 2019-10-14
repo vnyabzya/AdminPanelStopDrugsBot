@@ -376,7 +376,7 @@ def index():
                Region.query.order_by(Region.name).all()]
     session['url'] = request.url
     page = request.args.get('page', 1, type=int)
-    telegram_shops = TelegramShop.query(TelegramShop.valid == True).paginate(
+    telegram_shops = TelegramShop.query.filter(TelegramShop.valid == True).paginate(
         page, app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('index', page=telegram_shops.next_num) \
         if telegram_shops.has_next else None
