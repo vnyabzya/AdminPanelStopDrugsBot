@@ -306,7 +306,7 @@ def edit_telegram_shop(telegram_shop_id):
         # else:
         return redirect(url_for('edit_telegram_shop',
                                 telegram_shop_id=Shop.query.filter(Shop.checked_by_admin == False,
-                                                                   Shop.telegram_shop != None).first().id))
+                                                                   Shop.telegram_shop != None).first().telegram_shop.id))
 
     else:
         form.telegram_link.data = telegram_shop_obj.telegram_link
