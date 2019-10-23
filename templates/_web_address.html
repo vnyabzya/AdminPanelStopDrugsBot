@@ -1,0 +1,23 @@
+<div class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-4 mb-3 h-50">
+    <div class="card border-primary">
+        <div class="card-header">
+            {{ web_address.url_address }}<br>
+            <a href="{{ web_address.url_address }}" class="badge badge-pill badge-{% if web_address%}{% if web_address.shop.checked_by_admin%}success{% else %}danger{% endif %}{% else %}danger{% endif %}">Перейти</a>
+        </div>
+{#        <div class="card-body">#}
+{#            {% if web_address.regions %}#}
+{#                {% for region in telegram_shop.regions %}#}
+{#                    {{ region.name }}#}
+{#                {% endfor %}#}
+{#            {% endif %}#}
+{#            {% if telegram_shop.hide %}Скрытый{% else %}Доступен из бота{% endif %}<br>#}
+{#            {% if telegram_shop.block %}Заблокирова{% else %}Доступен{% endif %}<br>#}
+{#            {% if telegram_shop.shop.checked_by_admin%}Проверен администратором{% else %}Не проверен администратором{% endif %}#}
+{#            <hr>#}
+{#            <div class="row">#}
+{#                <a href="{{ url_for('edit_telegram_shop', telegram_shop_id=telegram_shop.id) }}" class="card-link">Изменить</a>#}
+{#                <a href="{{ url_for('delete', telegram_id=telegram_shop.id) }}" class="card-link">Удалить</a>#}
+{#            </div>#}
+{#        </div>#}
+    </div>
+</div>

@@ -363,6 +363,22 @@ def checked_by_admin():
                            prev_url=prev_url, regions=regions, progress=get_progress())
 
 
+@app.route('/web_addresses/', methods=['GET', 'POST'])
+@login_required
+def web_addresses():
+    session['url'] = request.url
+    page = request.args.get('page', 1, type=int)
+    shops = Shop.query.filter(Shop.web_address != None).paginate(
+        page, app.config['POSTS_PER_PAGE'], False)
+    next_url = url_for('web_addresses', page=shops.next_num) \
+        if shops.has_next else shops
+    prev_url = url_for('web_addresses', page=shops.prev_num) \
+        if shops.has_prev else None
+    return render_template("web_address.html", title='Проверены админом',
+                           web_addresses=[item.web_address for item in shops.items], next_url=next_url,
+                           prev_url=prev_url)
+
+
 @app.route('/statistic/', methods=['GET', 'POST'])
 @login_required
 def statistic():
@@ -392,7 +408,11 @@ def index():
 @app.route('/delete/<telegram_id>', methods=['GET', 'POST'])
 @login_required
 def delete(telegram_id):
-    TelegramShop.query.filter(TelegramShop.id == telegram_id).delete()
+    TelegramShop.query.filter(TelegramShop.id == telegram_id).valid = False
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
     try:
         db.session.commit()
         flash('Запись была удалена успешно')

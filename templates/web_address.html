@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+{#        <div class="progress mt-3">#}
+{#            <div class="progress-bar" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%🐌</div>#}
+{#        </div>#}
+        <div class="row mt-5">
+            <div class="col-6 col-sm-6 col-md-8 col-lg-9 col-xl-9">
+                <div class="row">
+                    {% for web_address in web_addresses %}
+                        {% include '_web_address.html' %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <nav aria-label="Page navigation example" class="mx-auto">
+                <ul class="pagination">
+                    {% if prev_url %}
+                        <li class="page-item"><a class="page-link" href="{{ prev_url }}">Предыдущие</a></li>
+                    {% endif %}
+                    {% if next_url %}
+                        <li class="page-item"><a class="page-link" href="{{ next_url }}">Следующие</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
