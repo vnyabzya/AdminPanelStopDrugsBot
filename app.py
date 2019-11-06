@@ -80,15 +80,20 @@ class Region(db.Model):
         back_populates="regions")
 
 
-class Admin(db.Model):
+class Admin(UserMixin, db.Model):
     __tablename__ = 'admins'
     id = Column(Integer, primary_key=True, unique=True)
     user = relationship("User", uselist=False, back_populates="admin")
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    tasks = db.relationship('Task', backref='admin', lazy='dynamic')
     rule = Column(String)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 class Image(db.Model):
@@ -125,6 +130,44 @@ class User(db.Model):
         self.user_name = user.username
         self.first_name = user.first_name
         self.last_name = user.last_name
+
+    def publish_telegram_shop(self):
+        job = queue.enqueue_call(
+            func=self.add_and_send_new_link, result_ttl=5000
+        )
+        return job
+
+    def get_mailto_link(self):
+        subject = urllib.parse.quote('Drugs Sales')
+        body = urllib.parse.quote(
+            'Please block this channel: {} in connection with the distribution and sale of drugs'.format(
+                self.telegram_link))
+        return "mailto:{}?subject={}&body={}".format(
+            'abuse@telegram.org', subject, body
+        )
+
+    def add_and_send_new_link(self):
+        try:
+            short_link = obj.shorten(self.get_mailto_link())
+        except Exception as error:
+            short_link = None
+            print(error)
+        for user in User.query.filter(User.activist == True).all():
+            try:
+                bot.send_message(user.id, '👨‍💻 Друже, просимо залишити скаргу про цю адресу, що використовують нарко'
+                                          'зловмисники!\n\nℹ️ Перейдіть за посиланням, натисніть "Поскаржитись" ==> '
+                                          'оберіть пункт "Інше" ==> введіть "Drug Sales" ==> '
+                                          'натисніть ✅\n"{}"'.format(self.telegram_link))
+                if short_link:
+                    user.send_message(text="Також Ви можете надіслати скаргу на цей бот/канал/чат/користувача на пошту "
+                                           "адміністрації Telegram (додавайте до листа скріншоти, як доказ), "
+                                           "для цього натисність <a href='{}'>Відправити лист</a>".format(short_link),
+                                      parse_mode="HTML")
+                bot.send_message(user.id, text='А ти вже поскаржився?', reply_markup=gen_inline_keyboard(
+                    [{'text': 'Так ✅',
+                      'value': 'reported_{}'.format(self.id)}]))
+            except Exception as error:
+                continue
 
 
 class TelegramShop(db.Model):
