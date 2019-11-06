@@ -70,15 +70,6 @@ regions__telegram_shops = db.Table('regions__telegram_shops',
                                    )
 
 
-def gen_inline_keyboard(items):
-    inline_keyboard = types.InlineKeyboardMarkup(row_width=1)
-    button_items = []
-    for item in items:
-        button_items.append(types.InlineKeyboardButton(item.get('text'), callback_data=item.get('value')))
-    inline_keyboard.row(*button_items)
-    return inline_keyboard
-
-
 class Region(db.Model):
     __tablename__ = 'regions'
     id = Column(Integer, primary_key=True, unique=True)
@@ -89,26 +80,25 @@ class Region(db.Model):
         back_populates="regions")
 
 
-class Admin(UserMixin, db.Model):
+class Admin(db.Model):
     __tablename__ = 'admins'
     id = Column(Integer, primary_key=True, unique=True)
     user = relationship("User", uselist=False, back_populates="admin")
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
+    tasks = db.relationship('Task', backref='admin', lazy='dynamic')
     rule = Column(String)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
 
 class Image(db.Model):
     __tablename__ = 'images'
     id = Column(Integer, primary_key=True, unique=True)
     photo_id = Column(Text, unique=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User", back_populates="images")
+    address_id = Column(Integer, ForeignKey('addresses.id'))
+    address = relationship("Address", back_populates="images")
 
 
 class User(db.Model):
@@ -124,6 +114,7 @@ class User(db.Model):
     inviter = relationship("User", remote_side='User.id', back_populates="invited_users")
     inviter_id = Column(Integer, ForeignKey('users.id'))
     invited_users = relationship("User", back_populates="inviter")
+    images = relationship("Image", back_populates="user")
     report_telegram_shops = relationship(
         "TelegramShop",
         secondary=users__telegram_shops,
@@ -157,44 +148,6 @@ class TelegramShop(db.Model):
         secondary=regions__telegram_shops,
         back_populates="telegram_shops")
 
-    def publish_telegram_shop(self):
-        job = queue.enqueue_call(
-            func=self.add_and_send_new_link, result_ttl=5000
-        )
-        return job
-
-    def get_mailto_link(self):
-        subject = urllib.parse.quote('Drugs Sales')
-        body = urllib.parse.quote(
-            'Please block this channel: {} in connection with the distribution and sale of drugs'.format(
-                self.telegram_link))
-        return "mailto:{}?subject={}&body={}".format(
-            'abuse@telegram.org', subject, body
-        )
-
-    def add_and_send_new_link(self):
-        try:
-            short_link = obj.shorten(self.get_mailto_link())
-        except Exception as error:
-            short_link = None
-            print(error)
-        for user in User.query.filter(User.activist == True).all():
-            try:
-                bot.send_message(user.id, '👨‍💻 Друже, просимо залишити скаргу про цю адресу, що використовують нарко'
-                                          'зловмисники!\n\nℹ️ Перейдіть за посиланням, натисніть "Поскаржитись" ==> '
-                                          'оберіть пункт "Інше" ==> введіть "Drug Sales" ==> '
-                                          'натисніть ✅\n"{}"'.format(self.telegram_link))
-                if short_link:
-                    user.send_message(text="Також Ви можете надіслати скаргу на цей бот/канал/чат/користувача на пошту "
-                                           "адміністрації Telegram (додавайте до листа скріншоти, як доказ), "
-                                           "для цього натисність <a href='{}'>Відправити лист</a>".format(short_link),
-                                      parse_mode="HTML")
-                bot.send_message(user.id, text='А ти вже поскаржився?', reply_markup=gen_inline_keyboard(
-                    [{'text': 'Так ✅',
-                      'value': 'reported_{}'.format(self.id)}]))
-            except Exception as error:
-                continue
-
 
 class WebAddress(db.Model):
     __tablename__ = 'web_addresses'
@@ -219,6 +172,7 @@ class Address(db.Model):
     location_id = Column(Integer, ForeignKey('locations.id'))
     shop_id = Column(Integer, ForeignKey('shops.id'))
     shop = relationship("Shop", back_populates="address")
+    images = relationship("Image", back_populates="address")
 
 
 class Location(db.Model):
@@ -238,6 +192,14 @@ class Shop(db.Model):
     telegram_shop = relationship("TelegramShop", uselist=False, back_populates="shop")
     web_address = relationship("WebAddress", uselist=False, back_populates="shop")
     address = relationship("Address", uselist=False, back_populates="shop")
+
+
+class Task(db.Model):
+    id = db.Column(db.String(36), primary_key=True)
+    name = db.Column(db.String(128), index=True)
+    description = db.Column(db.String(128))
+    admin_id = db.Column(db.Integer, db.ForeignKey('admins.id'))
+    complete = db.Column(db.Boolean, default=False)
 
 
 class MultiCheckboxField(SelectMultipleField):
