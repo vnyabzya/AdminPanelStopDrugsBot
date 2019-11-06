@@ -146,29 +146,6 @@ class User(db.Model):
             'abuse@telegram.org', subject, body
         )
 
-    def add_and_send_new_link(self):
-        try:
-            short_link = obj.shorten(self.get_mailto_link())
-        except Exception as error:
-            short_link = None
-            print(error)
-        for user in User.query.filter(User.activist == True).all():
-            try:
-                bot.send_message(user.id, '👨‍💻 Друже, просимо залишити скаргу про цю адресу, що використовують нарко'
-                                          'зловмисники!\n\nℹ️ Перейдіть за посиланням, натисніть "Поскаржитись" ==> '
-                                          'оберіть пункт "Інше" ==> введіть "Drug Sales" ==> '
-                                          'натисніть ✅\n"{}"'.format(self.telegram_link))
-                if short_link:
-                    user.send_message(text="Також Ви можете надіслати скаргу на цей бот/канал/чат/користувача на пошту "
-                                           "адміністрації Telegram (додавайте до листа скріншоти, як доказ), "
-                                           "для цього натисність <a href='{}'>Відправити лист</a>".format(short_link),
-                                      parse_mode="HTML")
-                bot.send_message(user.id, text='А ти вже поскаржився?', reply_markup=gen_inline_keyboard(
-                    [{'text': 'Так ✅',
-                      'value': 'reported_{}'.format(self.id)}]))
-            except Exception as error:
-                continue
-
 
 class TelegramShop(db.Model):
     __tablename__ = 'telegram_shops'
@@ -436,7 +413,8 @@ def publish(telegram_id):
     try:
         telegram.publish_telegram_shop()
         flash('Запись была опубликована успешно')
-    except:
+    except Exception as error:
+        print(error)
         flash('Что-то пошло не так', category='danger')
     if 'url' in session:
         return redirect(session['url'])
